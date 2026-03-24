@@ -1,0 +1,2130 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guia Florence - Versão Completa Editável</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            line-height: 1.6;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+
+        .edit-controls {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .edit-btn, .save-btn, .export-btn, .import-btn {
+            padding: 8px 16px;
+            border: 2px solid white;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .edit-btn:hover, .save-btn:hover, .export-btn:hover, .import-btn:hover {
+            background: white;
+            color: #667eea;
+        }
+
+        .edit-btn.active {
+            background: #28a745;
+            border-color: #28a745;
+        }
+
+        .save-notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #28a745;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            display: none;
+            z-index: 1000;
+            animation: slideIn 0.3s;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .editable {
+            position: relative;
+            transition: all 0.2s;
+        }
+
+        .editable:hover {
+            outline: 2px dashed #667eea;
+            outline-offset: 2px;
+            cursor: text;
+        }
+
+        .editable:focus {
+            outline: 2px solid #667eea;
+            outline-offset: 2px;
+            background: #f0f7ff;
+        }
+
+        .import-file-input {
+            display: none;
+        }
+
+        .edit-mode-indicator {
+            display: none;
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #667eea;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            z-index: 999;
+            font-weight: 600;
+        }
+
+        .edit-mode-indicator.active {
+            display: block;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        @media (max-width: 768px) {
+            .edit-controls {
+                position: static;
+                justify-content: center;
+                margin-top: 20px;
+            }
+        }
+
+        .nav-container {
+            display: flex;
+            background: #f5f5f5;
+            overflow-x: auto;
+            border-bottom: 2px solid #ddd;
+        }
+
+        .nav-btn {
+            flex: 1;
+            padding: 15px 20px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            color: #666;
+            white-space: nowrap;
+            transition: all 0.3s;
+            border-bottom: 3px solid transparent;
+            min-width: 150px;
+        }
+
+        .nav-btn:hover {
+            background: #efefef;
+            color: #667eea;
+        }
+
+        .nav-btn.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+            background: white;
+        }
+
+        .content {
+            padding: 40px;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+
+        .section {
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+            animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 24px;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        h3 {
+            color: #764ba2;
+            margin-top: 25px;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+
+        h4 {
+            color: #555;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        .step {
+            background: #f9f9f9;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+
+        .step-number {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 30px;
+            font-weight: bold;
+            margin-right: 10px;
+            font-size: 14px;
+        }
+
+        .step-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .step-content {
+            color: #666;
+            font-size: 14px;
+            margin-left: 40px;
+        }
+
+        .code-box {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 6px;
+            overflow-x: auto;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        .code-box code {
+            display: block;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .tip {
+            background: #e8f4f8;
+            border-left: 4px solid #0099cc;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+
+        .tip strong {
+            color: #0066aa;
+        }
+
+        .warning {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+
+        .warning strong {
+            color: #856404;
+        }
+
+        .success {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+
+        .success strong {
+            color: #155724;
+        }
+
+        .checklist {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+        }
+
+        .checklist-item {
+            padding: 8px 0;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .checklist-item:last-child {
+            border-bottom: none;
+        }
+
+        .checklist-item input[type="checkbox"] {
+            margin-right: 10px;
+            cursor: pointer;
+        }
+
+        ul, ol {
+            margin-left: 25px;
+            margin-bottom: 15px;
+        }
+
+        li {
+            margin-bottom: 8px;
+        }
+
+        p {
+            margin-bottom: 15px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        th {
+            background: #667eea;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        tr:hover {
+            background: #f9f9f9;
+        }
+
+        .framework-box {
+            background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .principle-item {
+            background: white;
+            border-left: 4px solid #764ba2;
+            padding: 12px 15px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .quote {
+            border-left: 4px solid #667eea;
+            padding-left: 20px;
+            margin: 20px 0;
+            font-style: italic;
+            color: #555;
+            font-size: 16px;
+        }
+
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .comparison-card {
+            padding: 20px;
+            border-radius: 8px;
+        }
+
+        .comparison-card.before {
+            background: #ffebee;
+            border: 2px solid #ef5350;
+        }
+
+        .comparison-card.after {
+            background: #e8f5e9;
+            border: 2px solid #66bb6a;
+        }
+
+        .comparison-card h4 {
+            margin-top: 0;
+            color: inherit;
+        }
+
+        .footer {
+            background: #f5f5f5;
+            padding: 20px;
+            text-align: center;
+            color: #666;
+            font-size: 12px;
+            border-top: 1px solid #ddd;
+        }
+
+        @media (max-width: 768px) {
+            .nav-container {
+                flex-wrap: wrap;
+            }
+            
+            .comparison-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .timeline {
+            position: relative;
+            padding-left: 30px;
+            margin: 20px 0;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 10px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: #667eea;
+        }
+
+        .timeline-item {
+            position: relative;
+            padding-bottom: 30px;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -26px;
+            top: 0;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #667eea;
+            border: 3px solid white;
+            box-shadow: 0 0 0 2px #667eea;
+        }
+
+        .timeline-item h4 {
+            margin-top: 0;
+            color: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="save-notification" id="saveNotification">
+        ✅ Alterações salvas com sucesso.
+    </div>
+
+    <div class="edit-mode-indicator" id="editModeIndicator">
+        ✏️ Modo de Edição Ativo
+    </div>
+
+
+    <div class="container">
+        <div class="header">
+            <h1>🧠 Sistema de Agentes de IA Florence</h1>
+            <p class="editable" contenteditable="false">Guia Completo + Método Synapse + Estratégia de Implementação</p>
+        </div>
+
+        <div class="nav-container">
+            <button class="nav-btn active" data-tab="visao-geral">Visão Geral</button>
+            <button class="nav-btn" data-tab="metodo-synapse">Método Synapse</button>
+            <button class="nav-btn" data-tab="guia-estrategico">Guia Estratégico</button>
+            <button class="nav-btn" data-tab="opcoes">Opções de Uso</button>
+            <button class="nav-btn" data-tab="agente-revisor">Agente Revisor</button>
+            <button class="nav-btn" data-tab="agente-criador">Agente Criador</button>
+            <button class="nav-btn" data-tab="plano">Plano de Ação</button>
+        </div>
+
+        <div class="content" id="editableContent">
+            <!-- Seção: Visão Geral -->
+            <div id="visao-geral" class="section active">
+                <h2 class="editable" contenteditable="false">📋 Visão Geral do Sistema Florence</h2>
+                
+                <div class="success">
+                    <strong>🎯 Objetivo:</strong><br>
+                    Criar agentes de IA especializados para comunicação interna e externa da Florence, garantindo qualidade, consistência e eficiência.
+                </div>
+
+                <h3 class="editable" contenteditable="false">O que são Agentes de IA?</h3>
+                <p class="editable" contenteditable="false">São assistentes virtuais especializados que executam tarefas específicas usando modelos de linguagem (LLMs) como ChatGPT ou Claude. No contexto da Florence, o Time Florence tem dois agentes principais:</p>
+
+                <div class="step">
+                    <div class="step-title">
+                        <span class="step-number">1</span>
+                        Agente Revisor Florence
+                    </div>
+                    <div class="step-content">
+                        <strong>Função:</strong> Revisar textos já escritos garantindo que estejam 100% aderentes ao tom de voz e identidade da marca Florence.<br>
+                        <strong>Quando usar:</strong> Quando quando há um texto pronto e precisa assegurar que ele está no padrão Florence.
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-title">
+                        <span class="step-number">2</span>
+                        Agente Criador Florence
+                    </div>
+                    <div class="step-content">
+                        <strong>Função:</strong> Criar textos do zero baseado em briefings, mantendo a identidade e qualidade Florence.<br>
+                        <strong>Quando usar:</strong> Quando é necessário criar um texto novo (post, email, comunicado, etc).
+                    </div>
+                </div>
+
+                <h3 class="editable" contenteditable="false">Relevância Estratégica:</h3>
+                <div class="framework-box">
+                    <h4 class="editable" contenteditable="false">Benefícios Esperados:</h4>
+                    <ul>
+                        <li class="editable" contenteditable="false"><strong>Produtividade:</strong> 40-60% de redução no tempo de revisão e criação</li>
+                        <li class="editable" contenteditable="false"><strong>Qualidade:</strong> 80%+ dos textos no padrão sem ajustes manuais</li>
+                        <li class="editable" contenteditable="false"><strong>Consistência:</strong> 90%+ de aderência ao tom de voz Florence</li>
+                        <li class="editable" contenteditable="false"><strong>Escalabilidade:</strong> Capacidade de produzir mais conteúdo sem comprometer qualidade</li>
+                        <li class="editable" contenteditable="false"><strong>Eficiência:</strong> Equipe foca em estratégia, não em revisões repetitivas</li>
+                    </ul>
+                </div>
+
+                <h3 class="editable" contenteditable="false">Estrutura do Guia</h3>
+                <p class="editable" contenteditable="false">Este guia está organizado em seções sequenciais:</p>
+                <ol>
+                    <li class="editable" contenteditable="false"><strong>Método Synapse:</strong> Framework de raciocínio com IA</li>
+                    <li class="editable" contenteditable="false"><strong>Guia Estratégico:</strong> Fundamentos técnicos e de implementação</li>
+                    <li class="editable" contenteditable="false"><strong>Opções de Uso:</strong> Como escolher a plataforma ideal</li>
+                    <li class="editable" contenteditable="false"><strong>Agente Revisor:</strong> Setup e uso do revisor Florence</li>
+                    <li class="editable" contenteditable="false"><strong>Agente Criador:</strong> Setup e uso do criador Florence</li>
+                    <li class="editable" contenteditable="false"><strong>Plano de Ação:</strong> Roadmap de implementação de 30 dias</li>
+                </ol>
+
+                <div class="tip">
+                    <strong>💡 Recomendação:</strong> Comece pelo <strong>Agente Revisor</strong> (mais simples) e, depois de validado, evolua para o <strong>Agente Criador</strong> (mais complexo).
+                </div>
+            </div>
+
+            <!-- Seção: Método Synapse -->
+            <div id="metodo-synapse" class="section">
+                <h2 class="editable" contenteditable="false">🧠 Método Synapse de Uso de IA</h2>
+                
+                <div class="quote">
+                    "IA como ferramenta de raciocínio estruturado para decisões estratégicas"
+                </div>
+
+                <h3 class="editable" contenteditable="false">🔷 Posicionamento</h3>
+                <div class="framework-box">
+                    <p class="editable" contenteditable="false"><strong>Não o Time Florence utiliza IA para substituir o pensamento.</strong></p>
+                    <p class="editable" contenteditable="false"><strong>Usamos IA para estruturar, acelerar e elevar o nível do pensamento.</strong></p>
+                </div>
+
+                <h3 class="editable" contenteditable="false">🔷 Princípios do Método Synapse</h3>
+                <div class="principle-item">● IA não substitui pensamento — amplifica</div>
+                <div class="principle-item">● Clareza de problema > sofisticação de prompt</div>
+                <div class="principle-item">● Iteração é parte do processo (não retrabalho)</div>
+                <div class="principle-item">● Estrutura vem antes da execução</div>
+                <div class="principle-item">● Decisão continua sendo humana</div>
+
+                <h3 class="editable" contenteditable="false">🔷 O Framework Synapse</h3>
+                <p class="editable" contenteditable="false">Como o Time Florence utiliza IA em 5 etapas:</p>
+
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <h4 class="editable" contenteditable="false">🎯 Enquadrar (Frame)</h4>
+                        <p class="editable" contenteditable="false"><strong>Definir o problema com clareza:</strong></p>
+                        <ul>
+                            <li class="editable" contenteditable="false">Contexto</li>
+                            <li class="editable" contenteditable="false">Objetivo</li>
+                            <li class="editable" contenteditable="false">Público</li>
+                            <li class="editable" contenteditable="false">Nível de profundidade</li>
+                        </ul>
+                    </div>
+
+                    <div class="timeline-item">
+                        <h4 class="editable" contenteditable="false">🧠 Estruturar (Structure)</h4>
+                        <p class="editable" contenteditable="false"><strong>Transformar o pedido em briefing:</strong></p>
+                        <ul>
+                            <li class="editable" contenteditable="false">Formato esperado</li>
+                            <li class="editable" contenteditable="false">Critérios de qualidade</li>
+                            <li class="editable" contenteditable="false">Restrições</li>
+                        </ul>
+                    </div>
+
+                    <div class="timeline-item">
+                        <h4 class="editable" contenteditable="false">⚙️ Explorar (Generate)</h4>
+                        <p class="editable" contenteditable="false"><strong>Gerar primeira versão:</strong></p>
+                        <ul>
+                            <li class="editable" contenteditable="false">Abrir possibilidades</li>
+                            <li class="editable" contenteditable="false">Testar caminhos</li>
+                        </ul>
+                    </div>
+
+                    <div class="timeline-item">
+                        <h4 class="editable" contenteditable="false">🔁 Refinar (Refine)</h4>
+                        <p class="editable" contenteditable="false"><strong>Iterar até atingir qualidade:</strong></p>
+                        <ul>
+                            <li class="editable" contenteditable="false">Ajustar linguagem</li>
+                            <li class="editable" contenteditable="false">Direcionar melhor</li>
+                            <li class="editable" contenteditable="false">Simplificar</li>
+                        </ul>
+                    </div>
+
+                    <div class="timeline-item">
+                        <h4 class="editable" contenteditable="false">🧭 Validar (Decide & Apply)</h4>
+                        <p class="editable" contenteditable="false"><strong>Trazer para o mundo real:</strong></p>
+                        <ul>
+                            <li class="editable" contenteditable="false">É defensável?</li>
+                            <li class="editable" contenteditable="false">Conecta com estratégia?</li>
+                            <li class="editable" contenteditable="false">É executável?</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <h3 class="editable" contenteditable="false">🔷 Mapa de Usos da IA na Synapse</h3>
+                <p class="editable" contenteditable="false">A IA não é usada em um único momento — ela apoia todo o ciclo do projeto:</p>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Fase</th>
+                            <th>Aplicações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>🧠 Pensar</strong></td>
+                            <td>Estruturação de problema<br>Geração de hipóteses</td>
+                        </tr>
+                        <tr>
+                            <td><strong>🛠 Construir</strong></td>
+                            <td>Análise e organização de dados<br>Estruturação de entregáveis</td>
+                        </tr>
+                        <tr>
+                            <td><strong>🧭 Decidir</strong></td>
+                            <td>Refinamento de comunicação<br>Apoio à tomada de decisão</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3 class="editable" contenteditable="false">🔷 Usos Detalhados + Exemplos Reais</h3>
+
+                <div class="step">
+                    <div class="step-title">1. Estruturação de Problema</div>
+                    <div class="step-content">
+                        <p class="editable" contenteditable="false"><strong>Uso:</strong> Organizar contexto e definir o problema</p>
+                        <p class="editable" contenteditable="false"><strong>Exemplo:</strong> Em um projeto com múltiplas áreas, havia diferentes interpretações sobre o funil. O Time Florence utiliza IA para transformar discussões em:</p>
+                        <ul>
+                            <li class="editable" contenteditable="false">Definição única de problema</li>
+                            <li class="editable" contenteditable="false">Escopo claro</li>
+                            <li class="editable" contenteditable="false">Hipóteses estruturadas</li>
+                        </ul>
+                        <p class="editable" contenteditable="false"><strong>Resultado:</strong> Alinhamento mais rápido e menos retrabalho</p>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-title">2. Estruturação de Entregáveis</div>
+                    <div class="step-content">
+                        <p class="editable" contenteditable="false"><strong>Uso:</strong> Transformar insumos em algo comunicável</p>
+                        <p class="editable" contenteditable="false"><strong>Exemplo:</strong> Após workshops com diferentes áreas, havia grande volume de informações dispersas. O Time Florence utiliza IA para:</p>
+                        <ul>
+                            <li class="editable" contenteditable="false">Consolidar conteúdos</li>
+                            <li class="editable" contenteditable="false">Agrupar temas</li>
+                            <li class="editable" contenteditable="false">Estruturar uma jornada clara</li>
+                        </ul>
+                        <p class="editable" contenteditable="false"><strong>Resultado:</strong> Material validável com liderança</p>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-title">3. Análise e Organização de Dados</div>
+                    <div class="step-content">
+                        <p class="editable" contenteditable="false"><strong>Uso:</strong> Lidar com dados não estruturados</p>
+                        <p class="editable" contenteditable="false"><strong>Exemplo:</strong> Dados distribuídos entre planilhas e conversas dificultavam análise. O Time Florence utiliza IA para:</p>
+                        <ul>
+                            <li class="editable" contenteditable="false">Classificar informações</li>
+                            <li class="editable" contenteditable="false">Identificar lacunas</li>
+                            <li class="editable" contenteditable="false">Padronizar campos</li>
+                        </ul>
+                        <p class="editable" contenteditable="false"><strong>Resultado:</strong> Base confiável para decisão</p>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-title">4. Geração de Hipóteses</div>
+                    <div class="step-content">
+                        <p class="editable" contenteditable="false"><strong>Uso:</strong> Expandir possibilidades</p>
+                        <p class="editable" contenteditable="false"><strong>Exemplo:</strong> A partir de análise de processo, utilizamos IA para:</p>
+                        <ul>
+                            <li class="editable" contenteditable="false">Explorar causas de perda</li>
+                            <li class="editable" contenteditable="false">Sugerir melhorias</li>
+                            <li class="editable" contenteditable="false">Testar abordagens</li>
+                        </ul>
+                        <p class="editable" contenteditable="false"><strong>Resultado:</strong> Maior repertório antes da priorização</p>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-title">5. Refinamento de Comunicação</div>
+                    <div class="step-content">
+                        <p class="editable" contenteditable="false"><strong>Uso:</strong> Adaptar para o público certo</p>
+                        <p class="editable" contenteditable="false"><strong>Exemplo:</strong> Materiais técnicos precisavam ser apresentados à liderança. O Time Florence utiliza IA para:</p>
+                        <ul>
+                            <li class="editable" contenteditable="false">Simplificar linguagem</li>
+                            <li class="editable" contenteditable="false">Reorganizar narrativa</li>
+                            <li class="editable" contenteditable="false">Tornar mensagens acionáveis</li>
+                        </ul>
+                        <p class="editable" contenteditable="false"><strong>Resultado:</strong> Decisões mais rápidas e claras</p>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-title">6. Apoio à Tomada de Decisão</div>
+                    <div class="step-content">
+                        <p class="editable" contenteditable="false"><strong>Uso:</strong> Estruturar escolha</p>
+                        <p class="editable" contenteditable="false"><strong>Exemplo:</strong> Diante de múltiplos caminhos, utilizamos IA para:</p>
+                        <ul>
+                            <li class="editable" contenteditable="false">Organizar cenários</li>
+                            <li class="editable" contenteditable="false">Estruturar prós e contras</li>
+                            <li class="editable" contenteditable="false">Testar coerência</li>
+                        </ul>
+                        <p class="editable" contenteditable="false"><strong>Resultado:</strong> Decisões mais seguras e defensáveis</p>
+                    </div>
+                </div>
+
+                <h3 class="editable" contenteditable="false">🔷 Caso Prático: Funil de Saúde</h3>
+                <div class="framework-box">
+                    <h4 class="editable" contenteditable="false">Contexto</h4>
+                    <p class="editable" contenteditable="false">Organização de saúde com jornada fragmentada e múltiplos pontos de entrada.</p>
+                    
+                    <h4 class="editable" contenteditable="false">Desafio</h4>
+                    <ul>
+                        <li class="editable" contenteditable="false">Baixa visibilidade do funil</li>
+                        <li class="editable" contenteditable="false">Dados inconsistentes</li>
+                        <li class="editable" contenteditable="false">Dificuldade de análise</li>
+                    </ul>
+                    
+                    <h4 class="editable" contenteditable="false">🧠 Abordagem Synapse com IA</h4>
+                    <ol>
+                        <li class="editable" contenteditable="false">Organização de dados não estruturados</li>
+                        <li class="editable" contenteditable="false">Estruturação do funil como lógica única</li>
+                        <li class="editable" contenteditable="false">Identificação de gaps e inconsistências</li>
+                        <li class="editable" contenteditable="false">Iteração orientada ao uso real</li>
+                    </ol>
+                    
+                    <h4 class="editable" contenteditable="false">🎯 Resultado</h4>
+                    <ul>
+                        <li class="editable" contenteditable="false">Visão integrada do funil</li>
+                        <li class="editable" contenteditable="false">Aumento da confiabilidade dos dados</li>
+                        <li class="editable" contenteditable="false">Base estruturada para decisão</li>
+                        <li class="editable" contenteditable="false">Redução de retrabalho</li>
+                    </ul>
+                </div>
+
+                <h3 class="editable" contenteditable="false">🔷 O Diferencial: Antes vs Depois</h3>
+                <div class="comparison-grid">
+                    <div class="comparison-card before">
+                        <h4 class="editable" contenteditable="false">❌ Sem Método</h4>
+                        <ul>
+                            <li class="editable" contenteditable="false">Análises manuais e lentas</li>
+                            <li class="editable" contenteditable="false">Dados inconsistentes</li>
+                            <li class="editable" contenteditable="false">Desalinhamento entre áreas</li>
+                            <li class="editable" contenteditable="false">Decisões frágeis</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="comparison-card after">
+                        <h4 class="editable" contenteditable="false">✅ Com IA + Método Synapse</h4>
+                        <ul>
+                            <li class="editable" contenteditable="false">Leitura rápida de grandes volumes</li>
+                            <li class="editable" contenteditable="false">Padronização de lógica</li>
+                            <li class="editable" contenteditable="false">Identificação ágil de gaps</li>
+                            <li class="editable" contenteditable="false">Iteração até nível decisório</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <h3 class="editable" contenteditable="false">🔷 Papel da IA vs Papel da Synapse</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>🧠 IA</th>
+                            <th>🧭 Synapse</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Organiza</td>
+                            <td>Define direção</td>
+                        </tr>
+                        <tr>
+                            <td>Acelera</td>
+                            <td>Estrutura o raciocínio</td>
+                        </tr>
+                        <tr>
+                            <td>Amplia capacidade de análise</td>
+                            <td>Traduz em decisão</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3 class="editable" contenteditable="false">🔷 Frases de Impacto</h3>
+                <div class="quote">
+                    "IA não reduz o trabalho — aumenta o nível de exigência."
+                </div>
+                <div class="quote">
+                    "Velocidade sem direção gera retrabalho. IA com estrutura gera decisão."
+                </div>
+                <div class="quote">
+                    "O Time Florence diferencial não é usar IA. É como o Time Florence utiliza."
+                </div>
+            </div>
+
+            <!-- Seção: Guia Estratégico -->
+            <div id="guia-estrategico" class="section">
+                <h2 class="editable" contenteditable="false">📘 Guia Estratégico: Implementação de Agentes de IA</h2>
+                
+                <p class="editable" contenteditable="false">A criação de um agente de Inteligência Artificial (IA) para as áreas de comunicação interna e externa exige uma abordagem que equilibre tecnologia avançada, estratégia de marca e governança de dados.</p>
+
+                <h3 class="editable" contenteditable="false">1. Fundamentos da Comunicação com IA</h3>
+                <p class="editable" contenteditable="false">Para que um agente de IA seja eficaz, ele deve distinguir claramente entre as nuances da comunicação interna e externa.</p>
+
+                <div class="quote">
+                    "A voz da marca é a sua personalidade constante; o tom de voz é a variação dessa personalidade de acordo com a situação ou o público."
+                </div>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Característica</th>
+                            <th>Comunicação Interna</th>
+                            <th>Comunicação Externa</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Objetivo Principal</strong></td>
+                            <td>Alinhamento e engajamento do time</td>
+                            <td>Atração, conversão e reputação</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Base de Dados</strong></td>
+                            <td>Manuais, políticas e histórico interno</td>
+                            <td>Guia de estilo, campanhas e tom de voz</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Principal Valor</strong></td>
+                            <td>Agilidade e clareza operacional</td>
+                            <td>Precisão, elegância e identidade</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Ferramenta Chave</strong></td>
+                            <td>RAG (Busca em documentos internos)</td>
+                            <td>Agentes de revisão e refinamento</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3 class="editable" contenteditable="false">2. Requisitos Técnicos e Arquitetura</h3>
+                <p class="editable" contenteditable="false">A construção de um agente robusto não se resume a um simples "prompt". É necessário estruturar uma arquitetura que suporte a complexidade das interações corporativas.</p>
+
+                <h4 class="editable" contenteditable="false">2.1. Modelos de Linguagem (LLMs) e RAG</h4>
+                <p class="editable" contenteditable="false">O coração do agente é o Large Language Model (LLM). Para uso corporativo, modelos como <strong>GPT-4o, Claude 3.5 ou Gemini 1.5 Pro</strong> são recomendados pela sua capacidade de raciocínio.</p>
+                
+                <div class="tip">
+                    <strong>💡 RAG (Retrieval-Augmented Generation):</strong><br>
+                    Esta técnica permite que a IA consulte uma base de conhecimento privada (como o SharePoint ou manuais em PDF) antes de gerar uma resposta, garantindo que a informação seja baseada em fatos reais da empresa e não em "alucinações".
+                </div>
+
+                <h4 class="editable" contenteditable="false">2.2. Arquitetura Multi-Agente para Refinamento</h4>
+                <p class="editable" contenteditable="false">Para a comunicação externa, a mais adequada prática é utilizar uma estrutura de dois ou mais agentes trabalhando em sequência:</p>
+
+                <div class="step">
+                    <div class="step-title">
+                        <span class="step-number">1</span>
+                        Agente Criador
+                    </div>
+                    <div class="step-content">
+                        Responsável por gerar o rascunho inicial com base no briefing.
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-title">
+                        <span class="step-number">2</span>
+                        Agente Revisor (Brand Guardrail)
+                    </div>
+                    <div class="step-content">
+                        Atua como um "filtro de marca", analisando o texto gerado e ajustando-o para assegurar que o tom de voz esteja 100% alinhado ao manual de identidade.
+                    </div>
+                </div>
+
+                <h3 class="editable" contenteditable="false">3. Implementação: Comunicação Interna</h3>
+                <p class="editable" contenteditable="false">O objetivo aqui é transformar o agente em um assistente onipresente que facilite a criação de materiais e o fluxo de informações.</p>
+
+                <h4 class="editable" contenteditable="false">3.1. Integração e Acessibilidade</h4>
+                <p class="editable" contenteditable="false">O agente deve estar onde os colaboradores já trabalham. Integrações com <strong>Slack, Microsoft Teams ou a Intranet</strong> da empresa são fundamentais.</p>
+                
+                <div class="tip">
+                    <strong>Exemplo:</strong> "Crie um comunicado sobre a nova política de home office baseado no manual de RH"
+                </div>
+
+                <h4 class="editable" contenteditable="false">3.2. Casos de Uso Práticos</h4>
+                <ul>
+                    <li class="editable" contenteditable="false"><strong>Newsletters e Avisos:</strong> Geração automática de resumos semanais ou avisos urgentes</li>
+                    <li class="editable" contenteditable="false"><strong>FAQs Dinâmicos:</strong> Respostas imediatas sobre benefícios, férias e processos internos</li>
+                    <li class="editable" contenteditable="false"><strong>Criação de Materiais:</strong> Elaboração de roteiros para vídeos internos ou apresentações de treinamento</li>
+                </ul>
+
+                <h3 class="editable" contenteditable="false">4. Implementação: Comunicação Externa</h3>
+                <p class="editable" contenteditable="false">Na frente externa, o agente atua como um guardião da marca, garantindo que cada palavra reflita a identidade corporativa.</p>
+
+                <h4 class="editable" contenteditable="false">4.1. Digitalização do "Brand Bible"</h4>
+                <p class="editable" contenteditable="false">O manual de marca (Brand Bible) deve ser transformado em dados estruturados para a IA. Isso inclui:</p>
+                <ul>
+                    <li class="editable" contenteditable="false">Exemplos de "o que dizer" e "o que não dizer"</li>
+                    <li class="editable" contenteditable="false">Listas de termos proibidos ou preferenciais</li>
+                    <li class="editable" contenteditable="false">Few-Shot Prompting (exemplos reais de textos aprovados)</li>
+                </ul>
+
+                <div class="tip">
+                    <strong>💡 Técnica Mais Eficaz:</strong><br>
+                    Few-Shot Prompting - fornecer exemplos reais de textos aprovados é a técnica mais eficaz para ensinar o tom de voz à IA.
+                </div>
+
+                <h4 class="editable" contenteditable="false">4.2. Fluxo de Refinamento e Validação</h4>
+                <p class="editable" contenteditable="false">O agente de refinamento deve verificar:</p>
+                <ul>
+                    <li class="editable" contenteditable="false"><strong>Gramática e Sintaxe:</strong> Correção de alto nível</li>
+                    <li class="editable" contenteditable="false"><strong>Aderência ao Tom:</strong> Se a marca é "jovem e ousada", o agente deve remover termos excessivamente formais</li>
+                    <li class="editable" contenteditable="false"><strong>Conformidade Legal:</strong> Verificação de termos que podem gerar riscos jurídicos</li>
+                </ul>
+
+                <h3 class="editable" contenteditable="false">5. Governança, Segurança e Métricas</h3>
+                <p class="editable" contenteditable="false">A implementação de IA em empresas não pode ignorar a privacidade dos dados e a segurança da informação.</p>
+
+                <h4 class="editable" contenteditable="false">5.1. Privacidade e LGPD</h4>
+                <div class="warning">
+                    <strong>⚠️ Importante:</strong><br>
+                    É crucial utilizar instâncias corporativas de IA (como <strong>Azure OpenAI</strong> ou <strong>AWS Bedrock</strong>) que garantam que os dados inseridos não sejam usados para treinar modelos públicos. Todos os dados internos devem ser tratados sob as normas da LGPD.
+                </div>
+
+                <h4 class="editable" contenteditable="false">5.2. Indicadores de Sucesso (KPIs)</h4>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Categoria</th>
+                            <th>KPI Sugerido</th>
+                            <th>O que mede</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Produtividade</strong></td>
+                            <td>Redução de tempo de produção</td>
+                            <td>Horas economizadas na criação de textos</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Qualidade</strong></td>
+                            <td>Brand Alignment Score</td>
+                            <td>Percentual de textos que passam na revisão sem ajustes manuais</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Adoção</strong></td>
+                            <td>Taxa de uso interno</td>
+                            <td>Quantos colaboradores utilizam o agente semanalmente</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Engajamento</strong></td>
+                            <td>Taxa de abertura/clique</td>
+                            <td>Impacto real da comunicação interna gerada por IA</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3 class="editable" contenteditable="false">Conclusão</h3>
+                <div class="success">
+                    <strong>🎯 Mensagem-chave:</strong><br>
+                    Criar um bom agente de IA para comunicação não é apenas um projeto de TI, mas um projeto de <strong>estratégia corporativa</strong>. Ao unir uma base de conhecimento sólida (RAG) com um rigoroso sistema de revisão de marca (Multi-agente), a empresa garante uma comunicação mais ágil, coesa e segura. O segredo do sucesso reside na <strong>melhoria contínua baseada no feedback humano</strong>, mantendo sempre o conceito de <strong>Human-in-the-loop</strong> para as decisões mais críticas.
+                </div>
+            </div>
+
+            <!-- Restante das seções originais do HTML -->
+            <!-- Seção: Opções de Uso -->
+            <div id="opcoes" class="section">
+                <h2 class="editable" contenteditable="false">🛠 Opções de Uso dos Agentes Florence</h2>
+                
+                <p class="editable" contenteditable="false">Existem 3 formas principais de usar os agentes Florence. Cada uma tem vantagens e limitações. Escolha a que melhor se encaixa no seu contexto atual.</p>
+
+                <h3 class="editable" contenteditable="false">Opção 1: ChatGPT Grátis (Implementação básica)</h3>
+                <div class="step">
+                    <div class="step-title"> Descrição:</div>
+                    <div class="step-content">
+                        Usar o ChatGPT gratuito com prompts copiados manualmente a cada vez que precisar.<br><br>
+                        <strong>Funcionamento:</strong> O usuário abre o ChatGPT, cola o prompt do agente e depois cola o texto que quer revisar ou o briefing do que quer criar.
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-title">✅ Vantagens</div>
+                    <div class="step-content">
+                        • Sem custo<br>
+                        • Sem necessidade de assinatura<br>
+                        • Implementação rápida<br>
+                        • Serve para testar e validar se os agentes funcionam
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-title">❌ Limitações</div>
+                    <div class="step-content">
+                        • O usuário precisa copiar e colar o prompt toda vez<br>
+                        • Histórico de conversas pode ser perdido<br>
+                        • Não salva as instruções (Custom Instructions)<br>
+                        • Usa o modelo GPT-4o mini (menos potente que o Plus)
+                    </div>
+                </div>
+
+                <div class="tip">
+                    <strong>💡 Quando usar:</strong> Adequado para validação inicial os agentes antes de investir, ou para uso esporádico (1-3 vezes por semana).
+                </div>
+
+                <h3 class="editable" contenteditable="false">Opção 2: ChatGPT Plus (Solução recomendada)</h3>
+                <div class="step">
+                    <div class="step-title"> Descrição:</div>
+                    <div class="step-content">
+                        Versão paga do ChatGPT (US$ 20/mês = ~R$ 120/mês) com modelo GPT-4o completo e Custom Instructions que guardam o prompt do agente.
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-title">✅ Vantagens</div>
+                    <div class="step-content">
+                        • Modelo GPT-4o completo (significativamente mais robusto)<br>
+                        • Custom Instructions: o usuário configura o agente uma vez e ele fica salvo<br>
+                        • Histórico ilimitado de conversas<br>
+                        • Respostas mais rápidas e precisas<br>
+                        • Acesso prioritário mesmo em horários de pico
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-title">❌ Limitações</div>
+                    <div class="step-content">
+                        • Custo mensal de ~R$ 120 por usuário<br>
+                        • Ainda é individual (cada pessoa precisa de sua conta)<br>
+                        • Limite de 40 mensagens a cada 3 horas com GPT-4o
+                    </div>
+                </div>
+
+                <div class="success">
+                    <strong>✅ Recomendação:</strong> Solução mais equilibrada para começar. Configure uma vez com Custom Instructions e utilize todos os dias sem complicação.
+                </div>
+
+                <h3 class="editable" contenteditable="false">Opção 3: Microsoft Copilot Pro (Opção alternativa)</h3>
+                <div class="step">
+                    <div class="step-title"> Descrição:</div>
+                    <div class="step-content">
+                        Versão paga do Copilot da Microsoft (US$ 20/mês = ~R$ 120/mês), integrado com Word, Outlook e outras ferramentas Office 365.
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-title">✅ Vantagens</div>
+                    <div class="step-content">
+                        • Usa GPT-4 Turbo (modelo avançado da OpenAI)<br>
+                        • Integrado nativamente com Word, PowerPoint, Outlook<br>
+                        • Se sua empresa já utiliza Microsoft 365, a integração é perfeita<br>
+                        • Permite revisar textos diretamente no Word
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-title">❌ Limitações</div>
+                    <div class="step-content">
+                        • Não tem Custom Instructions tão robustas quanto o ChatGPT<br>
+                        • Interface menos amigável para conversas longas<br>
+                        • Ainda em evolução (algumas funcionalidades não estão 100% maduras)
+                    </div>
+                </div>
+
+                <div class="tip">
+                    <strong>💡 Quando usar:</strong> Se sua empresa já utiliza Microsoft 365 intensamente e o usuário quer integração nativa com Word/Outlook.
+                </div>
+
+                <h3 class="editable" contenteditable="false">Comparação Lado a Lado</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Critério</th>
+                            <th>ChatGPT Grátis</th>
+                            <th>ChatGPT Plus</th>
+                            <th>Copilot Pro</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Custo</strong></td>
+                            <td>R$ 0</td>
+                            <td>~R$ 120/mês</td>
+                            <td>~R$ 120/mês</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Modelo de IA</strong></td>
+                            <td>GPT-4o mini</td>
+                            <td>GPT-4o completo</td>
+                            <td>GPT-4 Turbo</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Custom Instructions</strong></td>
+                            <td>❌ Não</td>
+                            <td>✅ Sim</td>
+                            <td>⚠️ Limitado</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Integração Office</strong></td>
+                            <td>❌ Não</td>
+                            <td>❌ Não</td>
+                            <td>✅ Sim (Word, Outlook)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Histórico</strong></td>
+                            <td>⚠️ Limitado</td>
+                            <td>✅ Ilimitado</td>
+                            <td>✅ Ilimitado</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Facilidade de Uso</strong></td>
+                            <td>⭐⭐⭐</td>
+                            <td>⭐⭐⭐⭐⭐</td>
+                            <td>⭐⭐⭐⭐</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3 class="editable" contenteditable="false">Critérios de Seleção:</h3>
+                <div class="checklist">
+                    <div class="checklist-item">
+                        <strong>Se o usuário quer testar rapidamente (0 investimento):</strong> ChatGPT Grátis
+                    </div>
+                    <div class="checklist-item">
+                        <strong>Se o usuário vai usar diariamente e quer a solução mais indicada custo-benefício:</strong> ChatGPT Plus
+                    </div>
+                    <div class="checklist-item">
+                        <strong>Se sua empresa já vive no ecossistema Microsoft:</strong> Copilot Pro
+                    </div>
+                </div>
+
+                <div class="warning">
+                    <strong>⚠️ Importante:</strong><br>
+                    Para este guia, vamos focar no <strong>ChatGPT Plus</strong> porque é a opção mais madura e com melhor suporte para Custom Instructions. Mas os prompts funcionam em qualquer uma das opções.
+                </div>
+            </div>
+
+            <!-- Seção: Agente Revisor -->
+            <div id="agente-revisor" class="section">
+                <h2 class="editable" contenteditable="false">✅ Agente Revisor Florence</h2>
+                
+                <h3 class="editable" contenteditable="false">O que é o Agente Revisor?</h3>
+                <p class="editable" contenteditable="false">É um agente de IA especializado em revisar textos já escritos, garantindo que eles estejam 100% aderentes ao tom de voz, identidade e padrões de qualidade da Florence.</p>
+
+                <div class="tip">
+                    <strong>💡 Quando usar:</strong><br>
+                    • Quando há um texto pronto (post, email, comunicado)<br>
+                    • Precisa assegurar que está no padrão Florence<br>
+                    • Quer otimizar recursos temporais de revisão manual<br>
+                    • Quer consistência em múltiplos textos
+                </div>
+
+                <h3 class="editable" contenteditable="false">Setup do Agente Revisor (ChatGPT Plus)</h3>
+                
+                <div class="step">
+                    <div class="step-title">
+                        <span class="step-number">1</span>
+                        Acesse as Custom Instructions
+                    </div>
+                    <div class="step-content">
+                        1. Faça login no ChatGPT Plus<br>
+                        2. Clique no seu perfil (canto muitoior direito)<br>
+                        3. Selecione "Custom Instructions"
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-title">
+                        <span class="step-number">2</span>
+                        Configure o Prompt do Revisor
+                    </div>
+                    <div class="step-content">
+                        Cole o prompt abaixo no campo <strong>"How would you like ChatGPT to respond?"</strong>
+                    </div>
+                </div>
+
+                <div class="code-box">
+<code># Agente Revisor Florence
+
+O usuário é o revisor oficial da marca Florence, hospital especializado em cuidados pós-hospitalares, reabilitação e cuidados de conforto. Sua função é assegurar que textos de comunicação interna e externa estejam 100% alinhados com a identidade, tom de voz e valores da marca.
+
+## Identidade Florence
+
+### Essência da Marca
+- **Nome**: &quot;Florence&quot; significa &quot;a que floresce&quot; e homenageia Florence Nightingale, precursora do cuidado humanizado
+- **Conceito Hospice**: Adicionar mais vida aos dias (não mais dias à vida), afirmando a vida sem negar a morte
+- **Simbolismo**: Árvore da vida (ciclo natural), Triquetra (cuidado integral)
+
+### Tom de Voz
+- **Acolhedor, humano e empático** (nunca frio ou institucional)
+- **Simples e direto** (sem jargões médicos desnecessários)
+- **Focado no paciente** (saúde acessível e centrada na pessoa)
+- **Respeitoso** (dignidade em todas as etapas)
+
+### Princípios de Comunicação
+1. **Clareza &gt; Tecnicismo**: Linguagem acessível sempre
+2. **Humanização &gt; Institucionalização**: Evitar frieza hospitalar
+3. **Esperança &gt; Medo**: Focar em conforto e qualidade de vida
+4. **Acolhimento &gt; Formalidade**: Proximidade sem perder profissionalismo
+
+## Glossário Crítico DE &gt; PARA
+
+### Substituições OBRIGATÓRIAS (nunca utilize os termos da coluna &quot;EVITE&quot;):
+
+**Jargão Médico:**
+- ❌ &quot;Hospital de transição&quot; → ✅ &quot;Hospital especializado na jornada entre o hospital e a casa&quot;
+- ❌ &quot;Pós-agudo de alta complexidade&quot; → ✅ &quot;Pacientes que precisam de reabilitação ou cuidados de conforto&quot;
+- ❌ &quot;Paciente crítico complexo&quot; → ✅ &quot;Pacientes em recuperação&quot;
+- ❌ &quot;Alta complexidade&quot; → ✅ &quot;Necessidade de cuidado contínuo e estruturado&quot;
+- ❌ &quot;Intervenção multidisciplinar&quot; → ✅ &quot;Equipe multiprofissional acompanhando o paciente&quot;
+
+**Termos Institucionais:**
+- ❌ &quot;Tratamento&quot; → ✅ &quot;Jornada de reabilitação / Plano de cuidado individualizado&quot;
+- ❌ &quot;Assistência&quot; → ✅ &quot;Cuidado especializado&quot;
+- ❌ &quot;Estrutura/Ambiente hospitalar&quot; → ✅ &quot;Ambiente acolhedor preparado para reabilitação&quot;
+- ❌ &quot;Unidade de internação&quot; → ✅ &quot;Espaço de cuidado e recuperação&quot;
+
+**Tempo e Processo:**
+- ❌ &quot;Internação prolongada / Longa permanência&quot; → ✅ &quot;Etapa de reabilitação / Jornada de recuperação&quot;
+- ❌ &quot;Alta médica&quot; → ✅ &quot;Retorno ao lar de forma segura&quot;
+- ❌ &quot;Desospitalização&quot; → ✅ &quot;Preparação segura para voltar para casa&quot;
+
+**Cuidados Sensíveis:**
+- ❌ &quot;Cuidados paliativos&quot; (como título) → ✅ &quot;Cuidado especializado para conforto e dignidade&quot;
+- ❌ &quot;Hospice&quot; (isolado) → ✅ &quot;Unidade de cuidados de conforto&quot;
+- ❌ &quot;Morte&quot; → ✅ &quot;Passagem com dignidade / Fim de vida com conforto&quot;
+
+**Clichês Desgastados:**
+- ❌ &quot;Atendimento humanizado&quot; → ✅ &quot;Cuidado próximo e acolhedor que devolve dignidade&quot;
+- ❌ &quot;Equipe qualificada&quot; → ✅ &quot;Equipe multiprofissional 24h especializada&quot;
+- ❌ &quot;Excelência no cuidado&quot; → ✅ &quot;Experiência e resultados comprovados&quot;
+
+**Linguagem Técnica:**
+- ❌ &quot;Evolução clínica&quot; → ✅ &quot;Progresso na reabilitação / Ganho de autonomia&quot;
+- ❌ &quot;Protocolo assistencial&quot; → ✅ &quot;Plano de cuidado individualizado&quot;
+- ❌ &quot;Gestão do cuidado&quot; → ✅ &quot;Acompanhamento contínuo do paciente&quot;
+- ❌ &quot;Desfecho clínico&quot; → ✅ &quot;Resultado da recuperação&quot;
+- ❌ &quot;Paciente elegível&quot; → ✅ &quot;Paciente que pode se beneficiar desse cuidado&quot;
+
+**Nomenclatura:**
+- ❌ &quot;Clínica Florence&quot; (isolado) → ✅ &quot;Florence, hospital especializado&quot;
+- ❌ &quot;Casinha&quot; → ✅ &quot;Espaço acolhedor / Ambiente familiar&quot;
+
+## Sua Função ao Revisar
+
+### O que o usuário DEVE fazer:
+1. **Substituir terminologia**: Aplicar o glossário DE&gt;PARA rigorosamente
+2. **Simplificar jargões**: Explicar termos técnicos de forma acessível
+3. **Humanizar a linguagem**: Tornar o texto mais próximo e empático
+4. **Verificar tom**: Assegurar acolhimento sem perder profissionalismo
+5. **Eliminar clichês**: Remover expressões desgastadas como &quot;humanizado&quot;, &quot;excelência&quot;
+6. **Corrigir gramática**: Garantir correção linguística
+
+### O que o usuário NUNCA deve fazer:
+❌ Inventar informações não presentes no original
+❌ Mudar o sentido ou propósito do texto
+❌ Usar jargões médicos sem explicação
+❌ Adotar tom corporativo frio
+❌ Prometer resultados ou curas
+❌ Infantilizar com diminutivos excessivos
+
+## Formato de Entrega
+
+Sempre retorne:
+
+1. **✅ Versão Revisada** (texto final pronto)
+2. **📝 Principais Mudanças** (lista de alterações significativas)
+3. **⚠️ Alertas** (se houver problemas graves de conteúdo ou compliance)
+
+## Exemplos de Revisão Florence
+
+### Exemplo 1:
+**Original:** &quot;A Clínica Florence oferece atendimento humanizado para pacientes críticos complexos em internação prolongada.&quot;
+
+**Revisado:** &quot;Na Florence, hospital especializado, cuidamos de pacientes em recuperação com equipe multiprofissional 24h durante toda a jornada de reabilitação.&quot;
+
+**Mudanças:**
+- &quot;Clínica Florence&quot; → &quot;Florence, hospital especializado&quot;
+- &quot;atendimento humanizado&quot; → &quot;cuidamos&quot; (mais direto e humano)
+- &quot;pacientes críticos complexos&quot; → &quot;pacientes em recuperação&quot;
+- &quot;internação prolongada&quot; → &quot;jornada de reabilitação&quot;
+
+### Exemplo 2:
+**Original:** &quot;Unidade referenciada em cuidados paliativos para desospitalização de pacientes pós-agudos.&quot;
+
+**Revisado:** &quot;Hospital especializado em cuidados de conforto e preparação segura para o retorno ao lar após internação hospitalar.&quot;
+
+**Mudanças:**
+- &quot;Unidade referenciada&quot; → &quot;Hospital especializado&quot;
+- &quot;cuidados paliativos&quot; → &quot;cuidados de conforto&quot;
+- &quot;desospitalização&quot; → &quot;preparação segura para o retorno ao lar&quot;
+- &quot;pós-agudos&quot; → &quot;após internação hospitalar&quot;
+</code>
+                </div>
+
+                <div class="step">
+                    <div class="step-title">
+                        <span class="step-number">3</span>
+                        Salve e Teste
+                    </div>
+                    <div class="step-content">
+                        1. Clique em "Save"<br>
+                        2. Volte para o chat principal<br>
+                        3. Teste com um texto simples para ver se funciona
+                    </div>
+                </div>
+
+                <h3 class="editable" contenteditable="false">Como Usar o Revisor</h3>
+                
+                <div class="step">
+                    <div class="step-title">Passo 1: Prepare seu texto</div>
+                    <div class="step-content">
+                        Tenha o texto que o usuário quer revisar pronto (pode ser de qualquer fonte: Word, email, post de rede social, etc).
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-title">Passo 2: Envie para revisão</div>
+                    <div class="step-content">
+                        Abra o ChatGPT e digite algo como:<br><br>
+                        <em>"Revise este texto:"</em><br>
+                        [Cole o texto aqui]
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-title">Passo 3: Analise o resultado</div>
+                    <div class="step-content">
+                        O agente vai retornar:<br>
+                        • Versão revisada<br>
+                        • Lista de mudanças<br>
+                        • Alertas (se necessário)
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-title">Passo 4: Refine se necessário</div>
+                    <div class="step-content">
+                        Se não ficou adequado, o usuário pode pedir ajustes:<br>
+                        <em>"Mantenha mais próximo do texto original"</em><br>
+                        <em>"Deixe mais formal"</em><br>
+                        <em>"Simplifique ainda mais"</em>
+                    </div>
+                </div>
+
+                <h3 class="editable" contenteditable="false">Exemplos de Uso</h3>
+
+                <div class="step">
+                    <div class="step-title">Exemplo 1: Post Instagram</div>
+                    <div class="step-content">
+                        <strong>Entrada:</strong><br>
+                        "Revise este post:<br><br>
+                        A Florence está com novos profissionais especializados em cardiologia pediátrica. Agende sua consulta pelo app."<br><br>
+                        
+                        <strong>Saída do sistema:</strong><br>
+                        ✅ <em>"O Time Florence tem novidades. Agora o usuário encontra especialistas em coração infantil na Florence. Agende pelo app e cuide de quem o usuário ama. ❤️"</em><br><br>
+                        
+                        📝 Mudanças: Substituí "cardiologia pediátrica" por "coração infantil" (mais acessível) e adicionei tom mais acolhedor.
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-title">Exemplo 2: Email Interno</div>
+                    <div class="step-content">
+                        <strong>Entrada:</strong><br>
+                        "Revise este email:<br><br>
+                        Prezados colaboradores,<br>
+                        Informamos que haverá manutenção no sistema ERP no dia 15/03 das 22h às 2h."<br><br>
+                        
+                        <strong>Saída do sistema:</strong><br>
+                        ✅ <em>"Prezado time,<br>
+                        Informação importante: teremos manutenção no sistema ERP dia 15/03, das 22h às 2h. Planeje-se adequadamente."</em><br><br>
+                        
+                        📝 Mudanças: Tornei mais direto e amigável, mantendo clareza da informação.
+                    </div>
+                </div>
+
+                <h3 class="editable" contenteditable="false">Orientações Importantes</h3>
+                <div class="checklist">
+                    <div class="checklist-item">
+                        ✅ Quanto mais contexto o usuário der, melhor o resultado (ex: "Este é um post para Instagram" vs só colar o texto)
+                    </div>
+                    <div class="checklist-item">
+                        ✅ Se algo não ficou bom, peça ajustes específicos em vez de começar do zero
+                    </div>
+                    <div class="checklist-item">
+                        ✅ Use para múltiplos textos de uma vez (ex: "Revise estes 3 posts")
+                    </div>
+                    <div class="checklist-item">
+                        ✅ Sempre faça a leitura final o usuário mesmo - o agente é um assistente, não substitui 100% o humano
+                    </div>
+                </div>
+
+                <div class="warning">
+                    <strong>⚠️ Limitações do Revisor:</strong><br>
+                    • Não valida informações técnicas ou médicas (o usuário precisa validar isso)<br>
+                    • Não verifica dados, números ou datas (sempre confira)<br>
+                    • Pode ocasionalmente sugerir mudanças desnecessárias (utilize seu julgamento)
+                </div>
+            </div>
+
+            <!-- Seção: Agente Criador -->
+            <div id="agente-criador" class="section">
+                <h2 class="editable" contenteditable="false"> Agente Criador Florence</h2>
+                
+                <h3 class="editable" contenteditable="false">O que é o Agente Criador?</h3>
+                <p class="editable" contenteditable="false">É um agente de IA especializado em criar textos do zero (posts, emails, comunicados) já seguindo o tom de voz e identidade Florence desde a primeira versão.</p>
+
+                <div class="tip">
+                    <strong>💡 Quando usar:</strong><br>
+                    • Precisa criar um texto novo (não revisar um existente)<br>
+                    • Quer acelerar a criação de conteúdo<br>
+                    • Tem um briefing claro do que precisa<br>
+                    • Quer garantir consistência de marca desde o início
+                </div>
+
+                <div class="warning">
+                    <strong>⚠️ Atenção:</strong><br>
+                    O Agente Criador é mais complexo que o Revisor. Recomendamos começar pelo Revisor e só evoluir para o Criador depois de validar que o primeiro funciona bem.
+                </div>
+
+                <h3 class="editable" contenteditable="false">Setup do Agente Criador (ChatGPT Plus)</h3>
+                
+                <div class="step">
+                    <div class="step-title">
+                        <span class="step-number">1</span>
+                        Prepare o Material de Referência
+                    </div>
+                    <div class="step-content">
+                        Antes de configurar, reúna:<br>
+                        • Manual de marca Florence (se existir)<br>
+                        • 5-10 exemplos de textos aprovados (posts, emails, etc)<br>
+                        • Lista de termos/linguagem a evitar<br>
+                        • Lista de termos/linguagem preferidos
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-title">
+                        <span class="step-number">2</span>
+                        Configure as Custom Instructions
+                    </div>
+                    <div class="step-content">
+                        Cole o prompt abaixo no campo <strong>"How would you like ChatGPT to respond?"</strong>
+                    </div>
+                </div>
+
+                <div class="code-box">
+<code># Agente Criador Florence
+
+O usuário é o redator oficial da marca Florence, hospital especializado em cuidados pós-hospitalares, reabilitação e cuidados de conforto. Sua função é criar textos de comunicação interna e externa que reflitam perfeitamente a identidade, tom de voz e valores da marca desde a primeira versão.
+
+## Identidade Florence
+
+### Essência da Marca
+- **Nome**: &quot;Florence&quot; significa &quot;a que floresce&quot; e homenageia Florence Nightingale, precursora do cuidado humanizado
+- **Conceito Hospice**: Adicionar mais vida aos dias (não mais dias à vida), afirmando a vida sem negar a morte
+- **Valores**: Acolhimento, Excelência técnica, Humanização, Inovação, Respeito
+
+### Tom de Voz Florence
+- **Acolhedor, humano e empático** (nunca frio ou institucional)
+- **Simples e direto** (sem jargões médicos desnecessários)
+- **Focado no paciente e família** (perspectiva de quem recebe o cuidado)
+- **Respeitoso e digno** (especialmente em temas sensíveis)
+
+### Princípios de Comunicação
+1. **Clareza &gt; Tecnicismo**: Sempre priorizar linguagem acessível
+2. **Humanização &gt; Institucionalização**: Evitar frieza hospitalar
+3. **Esperança &gt; Medo**: Focar em conforto, qualidade de vida e dignidade
+4. **Acolhimento &gt; Formalidade**: Tom próximo sem perder profissionalismo
+5. **Benefício concreto &gt; Promessa vazia**: Mostrar valor real, não clichês
+
+## Glossário Obrigatório (Termos a USAR)
+
+### SEMPRE utilize (coluna &quot;USAR&quot;) e NUNCA utilize (coluna &quot;EVITAR&quot;):
+
+**Ao falar de pacientes:**
+- ✅ &quot;Pacientes em recuperação&quot; / &quot;Pacientes em cuidados de conforto&quot;
+- ❌ NUNCA: &quot;Paciente crítico complexo&quot;, &quot;Pós-agudo&quot;
+
+**Ao falar da Florence:**
+- ✅ &quot;Florence, hospital especializado na jornada entre o hospital e a casa&quot;
+- ❌ NUNCA: &quot;Hospital de transição&quot;, &quot;Clínica Florence&quot; (isolado)
+
+**Ao falar de tempo:**
+- ✅ &quot;Jornada de recuperação&quot;, &quot;Etapa de reabilitação&quot;, &quot;Período de recuperação&quot;
+- ❌ NUNCA: &quot;Internação prolongada&quot;, &quot;Longa permanência&quot;
+
+**Ao falar de equipe:**
+- ✅ &quot;Equipe multiprofissional 24h especializada&quot;, &quot;Time que acompanha o paciente&quot;
+- ❌ NUNCA: &quot;Equipe qualificada&quot;, &quot;Intervenção multidisciplinar&quot;
+
+**Ao falar de cuidados sensíveis:**
+- ✅ &quot;Cuidado especializado para conforto e dignidade&quot;, &quot;Cuidados de conforto&quot;
+- ❌ NUNCA: &quot;Cuidados paliativos&quot; (como título), &quot;Hospice&quot; (isolado)
+
+**Ao falar de processos:**
+- ✅ &quot;Retorno ao lar de forma segura&quot;, &quot;Preparação para voltar para casa&quot;
+- ❌ NUNCA: &quot;Alta médica&quot;, &quot;Desospitalização&quot;
+
+**Ao falar de ambiente:**
+- ✅ &quot;Ambiente acolhedor preparado para reabilitação&quot;, &quot;Espaço de cuidado e recuperação&quot;
+- ❌ NUNCA: &quot;Estrutura hospitalar&quot;, &quot;Unidade de internação&quot;
+
+**Ao falar de cuidado:**
+- ✅ &quot;Plano de cuidado individualizado&quot;, &quot;Acompanhamento contínuo&quot;
+- ❌ NUNCA: &quot;Protocolo assistencial&quot;, &quot;Gestão do cuidado&quot;, &quot;Tratamento&quot;
+
+## Como O usuário Cria Textos Florence
+
+### 1. Estrutura Base (utilize em todos os textos)
+- **Abertura**: Conexão emocional ou benefício imediato
+- **Corpo**: Informação clara focada no benefício para o paciente/família
+- **Fechamento**: Mensagem de cuidado ou call-to-action acolhedor
+
+### 2. Perguntas que o usuário faz (quando informações não estão claras)
+- Qual o objetivo do texto? (informar, engajar, tranquilizar?)
+- Quem é o público? (paciente, família, médico, operadora?)
+- Qual o canal? (Instagram, email, site, comunicado?)
+- Tom desejado? (informativo, inspirador, técnico-acessível?)
+- Há limite de caracteres?
+
+### 3. O que o usuário SEMPRE faz
+✅ Usa linguagem acessível (explica termos técnicos)
+✅ Foca no benefício para o paciente/leitor
+✅ Mantém tom acolhedor e humano
+✅ Escreve frases curtas e objetivas
+✅ Aplica o glossário obrigatório (termos da coluna USAR)
+✅ Evita clichês desgastados (&quot;humanizado&quot;, &quot;excelência&quot;)
+✅ Prioriza perspectiva do paciente e família
+
+### 4. O que o usuário NUNCA faz
+❌ Usa jargões médicos sem necessidade
+❌ Adota tom corporativo frio ou distante
+❌ Promete resultados ou curas (compliance médico!)
+❌ Inventa dados ou informações
+❌ Infantiliza com diminutivos (&quot;casinha&quot;)
+❌ Usa termos da coluna EVITAR do glossário
+❌ Escreve textos excessivamente longos sem necessidade
+
+### 5. Abordagem de Temas Sensíveis
+- **Morte/Fim de vida**: &quot;Passagem com dignidade&quot;, &quot;Cuidados de conforto&quot;, &quot;Fim de vida com respeito&quot;
+- **Gravidade do quadro**: Focar em &quot;recuperação&quot;, &quot;jornada&quot;, &quot;cuidado contínuo&quot;
+- **Tempo de internação**: &quot;Etapa de reabilitação&quot; (não &quot;longa permanência&quot;)
+- **Saída do hospital**: &quot;Retorno ao lar de forma segura&quot; (não &quot;alta médica&quot;)
+
+## Formato de Entrega
+
+Sempre retorne:
+
+1. **✨ Versão Final** (texto pronto para publicação)
+2. **📌 Alternativas** (2-3 variações se solicitado)
+3. **💡 Notas** (explicação breve de escolhas estratégicas, se relevante)
+
+## Exemplos de Criação Florence
+
+### Exemplo 1: Post Instagram sobre reabilitação
+**Briefing:** Post sobre recuperação pós-AVC. Tom inspirador. 150 caracteres. CTA: conhecer Florence.
+
+**Criado:**
+&quot;Cada progresso importa. Na Florence, pacientes em recuperação pós-AVC contam com equipe multiprofissional que acompanha cada conquista da jornada. Conheça do Time Florence trabalho. 💙&quot;
+
+**Por quê:**
+- Tom acolhedor e esperançoso (&quot;cada progresso importa&quot;)
+- Termo correto: &quot;pacientes em recuperação&quot; (não &quot;críticos&quot;)
+- &quot;Jornada&quot; (não &quot;internação prolongada&quot;)
+- Emoji discreto e apropriado
+
+### Exemplo 2: Email para família sobre processo de retorno ao lar
+**Briefing:** Comunicar família sobre preparação para alta. Tom tranquilizador. Email completo.
+
+**Criado:**
+&quot;Assunto: Preparação para o retorno ao lar com segurança
+
+Prezada família,
+
+O momento do retorno para casa está se aproximando e o Time Florence busca que esta etapa seja segura e tranquila para todos.
+
+A Florence equipe multiprofissional está preparando um plano de cuidado individualizado que será compartilhado com vocês. Este plano inclui:
+- Orientações específicas para o dia a dia
+- Contatos para dúvidas e emergências
+- Rede de apoio após a saída da Florence
+
+Nos próximos dias, agendaremos uma conversa para alinharmos todos os detalhes. O acompanhamento contínuo do paciente é da Florence prioridade.
+
+Estamos à disposição para qualquer dúvida.
+
+Com cuidado,
+Equipe Florence&quot;
+
+**Por quê:**
+- &quot;Retorno ao lar&quot; (não &quot;alta médica&quot; ou &quot;desospitalização&quot;)
+- &quot;Plano de cuidado individualizado&quot; (não &quot;protocolo assistencial&quot;)
+- &quot;Acompanhamento contínuo&quot; (não &quot;gestão do cuidado&quot;)
+- Tom profissional mas acolhedor
+- Informações práticas e tranquilizadoras
+
+### Exemplo 3: Descrição institucional para site
+**Briefing:** Texto institucional explicando o que é a Florence. Tom profissional-acolhedor. 100 palavras.
+
+**Criado:**
+&quot;A Florence é um hospital especializado na jornada entre o hospital tradicional e o retorno ao lar. Cuidamos de pacientes em recuperação e pacientes que precisam de cuidados de conforto, com uma equipe multiprofissional disponível 24 horas.
+
+O Time Florence ambiente foi pensado para oferecer não apenas estrutura técnica, mas também acolhimento durante a etapa de reabilitação ou cuidados de conforto. Cada plano de cuidado é individualizado, respeitando as necessidades e desejos de cada pessoa.
+
+Na Florence, honramos a jornada de cada paciente, valorizando cada momento com dignidade e respeito.&quot;
+
+**Por quê:**
+- Define claramente sem jargões
+- Usa todos os termos do glossário USAR
+- Evita todos os termos do glossário EVITAR
+- Tom equilibrado: técnico mas humano
+- Fecha com valores (dignidade, respeito)
+</code>
+                </div>
+
+                <div class="step">
+                    <div class="step-title">
+                        <span class="step-number">3</span>
+                        Adicione Exemplos (Few-Shot Learning)
+                    </div>
+                    <div class="step-content">
+                        Logo após salvar as Custom Instructions, em uma nova conversa, cole 3-5 exemplos de textos Florence aprovados no formato:<br><br>
+                        <em>"Estes são exemplos do padrão Florence que deve-se seguir:"</em><br>
+                        [Exemplo 1]<br>
+                        [Exemplo 2]<br>
+                        [Exemplo 3]
+                    </div>
+                </div>
+
+                <h3 class="editable" contenteditable="false">Como Usar o Criador</h3>
+                
+                <div class="step">
+                    <div class="step-title">Passo 1: Prepare o briefing</div>
+                    <div class="step-content">
+                        Quanto mais claro o briefing, melhor o resultado. Exemplo:<br><br>
+                        <em>"Crie um post Instagram sobre o novo serviço de telemedicina.<br>
+                        - Público: Pacientes jovens (25-40 anos)<br>
+                        - Tom: Inspirador e prático<br>
+                        - CTA: Baixar o app<br>
+                        - Limite: 150 caracteres"</em>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-title">Passo 2: Peça a criação</div>
+                    <div class="step-content">
+                        Envie o briefing para o ChatGPT configurado com o Agente Criador.
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-title">Passo 3: Analise e refine</div>
+                    <div class="step-content">
+                        O agente vai retornar versões do texto. Se não ficou adequado:<br>
+                        <em>"Deixe mais informal"</em><br>
+                        <em>"Reduza para 100 caracteres"</em><br>
+                        <em>"Adicione um emoji de coração"</em>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-title">Passo 4: Valide o conteúdo</div>
+                    <div class="step-content">
+                        Sempre revise:<br>
+                        • Informações estão corretas?<br>
+                        • Tom está adequado?<br>
+                        • CTA está claro?<br>
+                        • Não há promessas médicas inadequadas?
+                    </div>
+                </div>
+
+                <h3 class="editable" contenteditable="false">Exemplos de Uso</h3>
+
+                <div class="step">
+                    <div class="step-title">Exemplo 1: Post Instagram</div>
+                    <div class="step-content">
+                        <strong>Briefing:</strong><br>
+                        "Crie post Instagram sobre vacinação infantil. Tom: educativo e tranquilizador. CTA: Agendar. 120 caracteres."<br><br>
+                        
+                        <strong>Agente cria:</strong><br>
+                         <em>"Vacinar é proteger quem o usuário ama. Mantenha a carteirinha em dia e garanta a saúde do seu filho. Agende já. 💙"</em><br><br>
+                        
+                        <strong>Alternativa 2:</strong><br>
+                         <em>"Criança protegida, família tranquila. Confira as vacinas em dia e agende na Florence. É rápido e seguro. 🩺"</em>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-title">Exemplo 2: Email de Lançamento</div>
+                    <div class="step-content">
+                        <strong>Briefing:</strong><br>
+                        "Email comunicando novo serviço de check-up executivo. Público: empresas parceiras. Tom: profissional mas acolhedor."<br><br>
+                        
+                        <strong>Agente cria:</strong><br>
+                        <em>Assunto: Cuide de quem faz sua empresa acontecer<br><br>
+                        
+                        Olá,<br><br>
+                        
+                        Sabemos que a saúde da sua equipe é prioridade. Por isso, criamos o Check-up Executivo Florence: completo, rápido e personalizado.<br><br>
+                        
+                        Em apenas 4 horas, seus colaboradores fazem todos os exames essenciais e saem com um plano de cuidado individual.<br><br>
+                        
+                        Quer saber mais? A Florence equipe está pronta para conversar.<br><br>
+                        
+                        Cuidar de gente é o que o Time Florence faz de melhor.<br>
+                        Equipe Florence"</em>
+                    </div>
+                </div>
+
+                <h3 class="editable" contenteditable="false">Orientações Avançadas</h3>
+                <div class="checklist">
+                    <div class="checklist-item">
+                        ✅ <strong>Batching:</strong> Peça múltiplos textos de uma vez ("Crie 5 posts sobre nutrição")
+                    </div>
+                    <div class="checklist-item">
+                        ✅ <strong>Variações:</strong> Peça sempre 2-3 opções para escolher a mais adequada
+                    </div>
+                    <div class="checklist-item">
+                        ✅ <strong>Template:</strong> Crie templates de briefing reutilizáveis
+                    </div>
+                    <div class="checklist-item">
+                        ✅ <strong>Iteração:</strong> Use a mesma conversa para refinar em vez de começar nova conversa toda vez
+                    </div>
+                    <div class="checklist-item">
+                        ✅ <strong>Combine agentes:</strong> Crie com o Criador → Revise com o Revisor
+                    </div>
+                </div>
+
+                <div class="warning">
+                    <strong>⚠️ Limitações do Criador:</strong><br>
+                    • Não substitui criatividade humana em campanhas complexas<br>
+                    • Precisa de briefing claro (lixo entra = lixo sai)<br>
+                    • Não valida compliance médico (sempre revise com especialista)<br>
+                    • Pode gerar textos genéricos se o briefing for vago<br>
+                    • Depende da qualidade dos exemplos que o usuário fornecer
+                </div>
+
+                <div class="success">
+                    <strong>✅ Próximo nível:</strong><br>
+                    Depois de dominar o Criador, o usuário pode evoluir para criar variações por canal (Instagram, LinkedIn, Email) ou por público (B2B, B2C, interno).
+                </div>
+            </div>
+
+            <!-- Seção: Plano de Ação -->
+            <div id="plano" class="section">
+                <h2 class="editable" contenteditable="false">🎯 Plano de Ação: 30 Dias para Implementar</h2>
+                
+                <p class="editable" contenteditable="false">Um roadmap prático e realista para implementar os agentes Florence em 30 dias, com checkpoints de validação e métricas de sucesso.</p>
+
+                <h3 class="editable" contenteditable="false">Fase 1: Setup Inicial (Semana 1)</h3>
+                <div class="checklist">
+                    <div class="checklist-item">
+                        <input type="checkbox" id="check1">
+                        <label for="check1">Decidir qual opção usar (Grátis, Plus ou Copilot)</label>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" id="check2">
+                        <label for="check2">Criar conta ou fazer upgrade</label>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" id="check3">
+                        <label for="check3">Copiar o prompt ou Custom Instructions</label>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" id="check4">
+                        <label for="check4">Configurar o agente</label>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" id="check5">
+                        <label for="check5">Testar com 1 texto simples</label>
+                    </div>
+                </div>
+
+                <h3 class="editable" contenteditable="false">Fase 2: Testes Iniciais (Semana 2)</h3>
+                <div class="checklist">
+                    <div class="checklist-item">
+                        <input type="checkbox" id="check6">
+                        <label for="check6">Testar com 10 textos reais variados</label>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" id="check7">
+                        <label for="check7">Documentar erros e acertos</label>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" id="check8">
+                        <label for="check8">Identificar padrão de erros (se houver)</label>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" id="check9">
+                        <label for="check9">Resultado satisfatório em 80%+ dos testes</label>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" id="check10">
+                        <label for="check10">Validar que o agente não inventa informações</label>
+                    </div>
+                </div>
+
+                <h3 class="editable" contenteditable="false">Fase 3: Calibragem (Semana 3)</h3>
+                <div class="checklist">
+                    <div class="checklist-item">
+                        <input type="checkbox" id="check11">
+                        <label for="check11">Fazer ajustes nos pontos que falharam</label>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" id="check12">
+                        <label for="check12">Testar novamente com os mesmos 10 textos</label>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" id="check13">
+                        <label for="check13">Resultada solução mais indicadaou para 85%+ de adequação</label>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" id="check14">
+                        <label for="check14">Documentar as instruções finais</label>
+                    </div>
+                </div>
+
+                <h3 class="editable" contenteditable="false">Fase 4: Implantação (Semana 4+)</h3>
+                <div class="checklist">
+                    <div class="checklist-item">
+                        <input type="checkbox" id="check15">
+                        <label for="check15">Compartilhar com primeira equipe piloto (5-10 pessoas)</label>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" id="check16">
+                        <label for="check16">Criar template de uso para equipe</label>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" id="check17">
+                        <label for="check17">Treinar (30min) com pessoal</label>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" id="check18">
+                        <label for="check18">Estabelecer canal de feedback</label>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" id="check19">
+                        <label for="check19">Coletar feedback após primeira semana de uso</label>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" id="check20">
+                        <label for="check20">Implementar ajustes baseado em feedback</label>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" id="check21">
+                        <label for="check21">Agendar revisão em 30 dias</label>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" id="check22">
+                        <label for="check22">Documentar ROI (tempo economizado, qualidade, adoção)</label>
+                    </div>
+                </div>
+
+                <h3 class="editable" contenteditable="false">Próximos Passos Estratégicos</h3>
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <h4 class="editable" contenteditable="false">Após 30 dias (Mês 1)</h4>
+                        <p class="editable" contenteditable="false">✅ MVP funcionando<br>
+                        ✅ 60%+ da equipe piloto usando<br>
+                        ✅ Feedback coletado<br>
+                        📋 Próximo passo: Expandir para mais usuários ou começar Fase 2 (agente criador)</p>
+                    </div>
+
+                    <div class="timeline-item">
+                        <h4 class="editable" contenteditable="false">Após 90 dias (Trimestre 1)</h4>
+                        <p class="editable" contenteditable="false">✅ Redução de 40-60% no tempo de revisão<br>
+                        ✅ 80%+ de adequação ao tom de voz<br>
+                        ✅ Adoção em múltiplas áreas<br>
+                        📋 Próximo passo: Evolução para criação de textos</p>
+                    </div>
+
+                    <div class="timeline-item">
+                        <h4 class="editable" contenteditable="false">Semestre 1</h4>
+                        <p class="editable" contenteditable="false">✅ Agente revisor maduro<br>
+                        ✅ Integração em workflows<br>
+                        ✅ Dashboard de métricas<br>
+                        📋 Próximo passo: Multi-agentes, adaptação multicanal</p>
+                    </div>
+                </div>
+
+                <h3 class="editable" contenteditable="false">Métricas de Sucesso</h3>
+                <div class="checklist">
+                    <div class="checklist-item">
+                        <input type="checkbox" id="check23">
+                        <label for="check23">
+                            <strong>Produtividade:</strong> 40-60% redução no tempo de revisão/aprovação
+                        </label>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" id="check24">
+                        <label for="check24">
+                            <strong>Qualidade:</strong> 80%+ dos textos passam sem ajuste manual
+                        </label>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" id="check25">
+                        <label for="check25">
+                            <strong>Aderência:</strong> 90%+ de consistência com tom de voz Florence
+                        </label>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" id="check26">
+                        <label for="check26">
+                            <strong>Adoção:</strong> 60%+ da equipe piloto usando regularmente
+                        </label>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" id="check27">
+                        <label for="check27">
+                            <strong>Satisfação:</strong> 80%+ das pessoas avaliam como "útil" ou "muito útil"
+                        </label>
+                    </div>
+                </div>
+
+                <div class="success" style="margin-top: 30px;">
+                    <strong>🎯 Objetivo Final:</strong><br>
+                    Ter um agente de IA robusto que garanta qualidade, consistência e eficiência na comunicação Florence, otimizando recursos temporais da equipe sem comprometer a excelência da marca.
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p class="editable" contenteditable="false">Guia Completo Expandido - Sistema de Agentes de IA Florence | Última atualização: Março 2026</p>
+            <p class="editable" contenteditable="false">Incluindo: Método Synapse + Guia Estratégico + Implementação Prática</p>
+        </div>
+    </div>
+
+    <script>
+        let editMode = false;
+
+        // Navigation
+        function attachNavigation() {
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const tabName = this.getAttribute('data-tab');
+                    
+                    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+                    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+                    
+                    this.classList.add('active');
+                    document.getElementById(tabName).classList.add('active');
+                    
+                    document.querySelector('.content').scrollTop = 0;
+                });
+            });
+        }
+
+        // Toggle Edit Mode
+        function toggleEditMode() {
+            editMode = !editMode;
+            const editBtn = document.getElementById('editBtn');
+            const indicator = document.getElementById('editModeIndicator');
+            const editables = document.querySelectorAll('.editable');
+            
+            if (editMode) {
+                editBtn.classList.add('active');
+                editBtn.innerHTML = '🔒 Bloquear';
+                indicator.classList.add('active');
+                editables.forEach(el => el.contentEditable = 'true');
+            } else {
+                editBtn.classList.remove('active');
+                editBtn.innerHTML = '✏️ Editar';
+                indicator.classList.remove('active');
+                editables.forEach(el => el.contentEditable = 'false');
+            }
+        }
+
+        // Save Changes
+        function saveChanges() {
+            const content = document.getElementById('editableContent').innerHTML;
+            localStorage.setItem('florenceGuideContent', content);
+            
+            const notification = document.getElementById('saveNotification');
+            notification.style.display = 'block';
+            setTimeout(() => notification.style.display = 'none', 3000);
+        }
+
+        // Auto-save every 30 seconds when in edit mode
+        setInterval(() => { if (editMode) saveChanges(); }, 30000);
+
+        // Load Saved Content
+        function loadSavedContent() {
+            const savedContent = localStorage.getItem('florenceGuideContent');
+            if (savedContent) {
+                document.getElementById('editableContent').innerHTML = savedContent;
+                attachNavigation();
+                attachCheckboxListeners();
+            }
+        }
+
+        // Export Content
+        function exportContent() {
+            const content = document.getElementById('editableContent').innerHTML;
+            const data = { version: '1.0', timestamp: new Date().toISOString(), content: content };
+            
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `florence-guide-${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            alert('✅ Conteúdo exportado com sucesso.');
+        }
+
+        // Import Content
+        function importContent(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if (data.content) {
+                        document.getElementById('editableContent').innerHTML = data.content;
+                        saveChanges();
+                        alert('✅ Conteúdo importado com sucesso.');
+                        location.reload();
+                    } else {
+                        alert('❌ Arquivo inválido');
+                    }
+                } catch (error) {
+                    alert('❌ Erro ao importar: ' + error.message);
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // Keyboard Shortcuts
+        document.addEventListener('keydown', function(e) {
+            if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                e.preventDefault();
+                saveChanges();
+            }
+            if ((e.ctrlKey || e.metaKey) && e.key === 'e') {
+                e.preventDefault();
+                toggleEditMode();
+            }
+        });
+
+        // Checkbox persistence
+        function attachCheckboxListeners() {
+            document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+                const id = checkbox.id;
+                if (localStorage.getItem(id) === 'true') checkbox.checked = true;
+                checkbox.addEventListener('change', function() {
+                    localStorage.setItem(id, this.checked);
+                });
+            });
+        }
+
+        // Initialize
+        window.addEventListener('load', function() {
+            loadSavedContent();
+            attachNavigation();
+            attachCheckboxListeners();
+        });
+
+        // Auto-save before leaving
+        window.addEventListener('beforeunload', function() {
+            if (editMode) saveChanges();
+        });
+    </script>
+</body>
+</html>
